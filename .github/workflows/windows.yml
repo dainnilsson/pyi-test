@@ -1,0 +1,49 @@
+name: Windows
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+        shell: powershell
+
+      - name: Clone PyInstaller
+        uses: actions/checkout@v2
+        with:
+          repository: pyinstaller/pyinstaller
+          ref: 90431c010a23b1c9080fcb44f932d4615bb71825
+          path: pyinstaller
+
+      - name: Build PyInstaller
+        shell: bash
+        run: |
+          cd pyinstaller/bootloader
+          python waf distclean all
+          cd ..
+          pip install .
+          cd ..
+
+      - name: Build exe
+        shell: bash
+        run: |
+          pyinstaller program.spec
+          dist/program/program.exe
+
+      - name: Upload build
+        uses: actions/upload-artifact@v1
+        with:
+          name: pyinstaller-test-windows
+          path: dist/program/
